@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Galerie Urbaine</title>
+<title>Neo-Space</title>
 <meta name="description" content="Une galerie d'art en réalité augmentée, dans l'espace public.">
-<meta name="theme-color" content="#101114">
+<meta name="theme-color" content="#ffffff">
 <link rel="stylesheet" href="./style.css">
 <!-- Pour changer de version, voir la section « Mettre à jour model-viewer » du README. -->
 <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.2.0/dist/model-viewer.min.js"></script>
@@ -13,79 +13,153 @@
 
 <body>
 
-<!-- Écran d'attente, masqué dès que la configuration est chargée -->
 <div id="splash" class="splash">
   <div class="splash__mark" aria-hidden="true"></div>
-  <p class="splash__text">Chargement de l'œuvre…</p>
 </div>
 
-<!-- Écran d'erreur -->
 <div id="error" class="error" hidden>
-  <h1 class="error__title">Œuvre introuvable</h1>
+  <h1 class="error__title">Balise introuvable</h1>
   <p class="error__text" id="error-text"></p>
 </div>
 
 <main id="app" class="app" hidden>
 
-  <header class="place">
-    <p class="place__label">Vous êtes à</p>
-    <h1 class="place__name" id="spot-name"></h1>
-    <p class="proximity" id="proximity" hidden></p>
+  <header class="intro">
+    <h1 class="intro__title">
+      bienvenue sur<br><span class="intro__app" id="app-title"></span>
+    </h1>
+    <p class="intro__sub" id="intro-sub"></p>
   </header>
 
-  <!-- Sélecteur de canaux : masqué tant qu'il n'y a qu'un seul canal -->
-  <nav class="channels" id="channels" aria-label="Canaux thématiques" hidden></nav>
+  <button type="button" class="cta" id="cta">
+    <span id="cta-label">Lancer l'expérience AR</span>
+  </button>
 
-  <section class="stage" id="stage">
-    <model-viewer
-      id="viewer"
-      alt=""
-      ar
-      ar-modes="webxr scene-viewer quick-look"
-      ar-scale="fixed"
-      ar-placement="floor"
-      xr-environment
-      quick-look-browsers="safari chrome"
-      camera-controls
-      touch-action="pan-y"
-      shadow-intensity="1"
-      shadow-softness="0.8"
-      environment-image="neutral"
-      exposure="1"
-      loading="eager">
+  <section class="card">
 
-      <button class="ar-button" slot="ar-button" id="ar-button">
-        <span class="ar-button__icon" aria-hidden="true"></span>
-        Voir dans la rue
+    <p class="card__meta" id="card-meta"></p>
+
+    <!-- Menu 1 : les balises du parcours -->
+    <nav class="tabs" id="tabs-balises" aria-label="Balises du parcours"></nav>
+
+    <!-- Espace contextuel : quatre états, un seul visible -->
+    <div class="panel" id="panel">
+
+      <section class="state" id="state-infos" data-state="infos">
+        <h2 class="state__title" id="art-title"></h2>
+        <p class="state__text" id="art-desc"></p>
+        <p class="state__meta" id="art-meta"></p>
+      </section>
+
+      <section class="state" id="state-nav" data-state="nav" hidden>
+        <p class="nav__distance" id="nav-distance">Localisation en cours…</p>
+        <p class="state__text" id="nav-hint"></p>
+        <a class="btn-secondary" id="nav-go" hidden rel="noopener">Lancer l'itinéraire</a>
+      </section>
+
+      <section class="state" id="state-preview" data-state="preview" hidden>
+        <model-viewer
+          id="viewer"
+          alt=""
+          ar
+          ar-modes="webxr scene-viewer quick-look"
+          ar-placement="floor"
+          xr-environment
+          quick-look-browsers="safari chrome"
+          camera-controls
+          touch-action="pan-y"
+          shadow-intensity="1"
+          shadow-softness="0.8"
+          environment-image="neutral"
+          loading="eager"
+          reveal="auto">
+        </model-viewer>
+        <button type="button" class="preview-photo" id="preview-photo" hidden>
+          <img id="preview-img" alt="">
+          <span class="preview-photo__hint">Agrandir</span>
+        </button>
+      </section>
+
+      <section class="state" id="state-artist" data-state="artist" hidden>
+        <h2 class="state__title" id="artist-name"></h2>
+        <p class="state__text" id="artist-bio"></p>
+        <a class="btn-secondary" id="artist-link" hidden rel="noopener" target="_blank"></a>
+      </section>
+
+    </div>
+
+    <!-- Menu 2 : les options d'affichage -->
+    <nav class="options" id="options" aria-label="Informations sur la balise">
+      <button type="button" class="option" data-option="infos" aria-pressed="true">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.2v.1"/></svg>
+        <span>Infos</span>
       </button>
+      <button type="button" class="option" data-option="nav" aria-pressed="false">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6.5 13.5L13.5 6.5M8 6.5h5.5V12"/></svg>
+        <span>Trajet</span>
+      </button>
+      <button type="button" class="option" data-option="preview" aria-pressed="false">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4.5c3.6 0 6.3 2.8 7.3 5.5-1 2.7-3.7 5.5-7.3 5.5S3.7 12.7 2.7 10C3.7 7.3 6.4 4.5 10 4.5z"/><circle cx="10" cy="10" r="2.2"/></svg>
+        <span>Aperçu</span>
+      </button>
+      <button type="button" class="option" data-option="artist" aria-pressed="false">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3"/><path d="M13 7v4.2a2.3 2.3 0 004.1 1.4A7.5 7.5 0 1014.4 16"/></svg>
+        <span>Artiste</span>
+      </button>
+    </nav>
 
-      <div class="progress" slot="progress-bar">
-        <div class="progress__fill" id="progress-fill"></div>
-      </div>
-    </model-viewer>
-
-    <p class="notice" id="ar-unavailable" hidden>
-      La réalité augmentée n'est pas disponible sur cet appareil.
-      L'œuvre reste visible et manipulable ci-dessus.
-    </p>
-
-    <p class="notice" id="ar-gate" hidden></p>
   </section>
 
-  <!-- Consigne de pose : juste avant le geste, pas en bas de page -->
-  <p class="instruction" id="art-instruction" hidden></p>
-
-  <section class="sheet">
-    <h2 class="sheet__title" id="art-title"></h2>
-    <p class="sheet__artist" id="art-artist"></p>
-    <p class="sheet__desc" id="art-desc"></p>
-
-    <a class="cta" id="art-cta" hidden></a>
-
-    <p class="sheet__meta" id="art-meta"></p>
-  </section>
+  <footer class="foot">
+    <a class="foot__link" id="link-more"></a>
+    <a class="foot__link" id="link-contact"></a>
+  </footer>
 
 </main>
+
+<!-- Fenêtre de lancement -->
+<div class="sheet" id="launch" hidden role="dialog" aria-modal="true" aria-labelledby="launch-title">
+  <div class="sheet__scrim" id="launch-scrim"></div>
+  <div class="sheet__panel" role="document">
+    <button type="button" class="sheet__close" id="launch-close" aria-label="Fermer">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></svg>
+    </button>
+
+    <h2 class="sheet__title" id="launch-title">Avant de commencer</h2>
+
+    <button type="button" class="sheet__figure" id="launch-figure" hidden>
+      <img id="launch-img" alt="Exemple de point de vue pour observer l'œuvre">
+      <span class="preview-photo__hint">Agrandir</span>
+    </button>
+
+    <div class="sheet__body">
+      <p>
+        Trouvez un point de vue dégagé vers le site cible. Il devrait se situer
+        à proximité immédiate de la balise que vous avez scannée, à moins de
+        cinq mètres.
+      </p>
+      <p>
+        Une fois dans l'interface de réalité augmentée, vous pourrez
+        repositionner et redimensionner l'œuvre avec vos doigts.
+      </p>
+    </div>
+
+    <p class="sheet__warning">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.8l7.5 13H2.5l7.5-13z"/><path d="M10 8v3.6M10 13.6v.1"/></svg>
+      Restez conscient de votre environnement à tout moment.
+    </p>
+
+    <button type="button" class="cta cta--sheet" id="launch-go">C'est parti !</button>
+  </div>
+</div>
+
+<!-- Agrandissement d'image -->
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Image agrandie">
+  <button type="button" class="lightbox__close" id="lightbox-close" aria-label="Fermer">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></svg>
+  </button>
+  <img id="lightbox-img" alt="">
+</div>
 
 <script type="module" src="./app.js"></script>
 </body>

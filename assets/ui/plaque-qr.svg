@@ -13,7 +13,7 @@
   <g font-family="Helvetica, Arial, sans-serif" fill="#111111">
 
     <text x="74" y="26" text-anchor="middle" font-size="7.5"
-          font-weight="700" letter-spacing="1.6">GALERIE URBAINE</text>
+          font-weight="700" letter-spacing="1.6">NEO-SPACE</text>
     <text x="74" y="37" text-anchor="middle" font-size="4.6" fill="#555555">
       Une œuvre est installée ici, en réalité augmentée.
     </text>
@@ -28,7 +28,7 @@
       90 × 90 mm
     </text>
     <text x="74" y="110" text-anchor="middle" font-size="3.6" fill="#bbbbbb">
-      encodant ?spot=spot-01
+      encodant ?parcours=001&amp;balise=1
     </text>
 
     <!-- Équerres de repérage du QR -->

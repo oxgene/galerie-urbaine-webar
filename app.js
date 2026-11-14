@@ -1,10 +1,13 @@
 /* ------------------------------------------------------------------
-   Galerie Urbaine — MVP WebAR
-   QR code → canaux → œuvre → réalité augmentée, avec géolocalisation
-   de découverte.
+   Neo-Space — MVP WebAR
 
-   Tout le contenu vient de config.json : ce fichier ne contient aucun
-   texte d'œuvre, aucun nom de lieu, aucun chemin de modèle.
+   Un parcours contient des balises ; une balise porte une œuvre.
+   Le QR code posé sur site désigne une balise précise : c'est la
+   balise « scannée ». On peut en consulter d'autres, mais la réalité
+   augmentée ne se lance que là où l'on se trouve — ailleurs, le
+   bouton principal devient un itinéraire.
+
+   Tout le contenu vient de config.json.
    ------------------------------------------------------------------ */
 
 const $ = (id) => document.getElementById(id);
@@ -14,48 +17,53 @@ const els = {
   error: $("error"),
   errorText: $("error-text"),
   app: $("app"),
-  spotName: $("spot-name"),
-  proximity: $("proximity"),
-  channels: $("channels"),
-  stage: $("stage"),
+  appTitle: $("app-title"),
+  introSub: $("intro-sub"),
+  cta: $("cta"),
+  ctaLabel: $("cta-label"),
+  cardMeta: $("card-meta"),
+  tabs: $("tabs-balises"),
+  options: $("options"),
+  panel: $("panel"),
+  artTitle: $("art-title"),
+  artDesc: $("art-desc"),
+  artMeta: $("art-meta"),
+  navDistance: $("nav-distance"),
+  navHint: $("nav-hint"),
+  navGo: $("nav-go"),
   viewer: $("viewer"),
-  arButton: $("ar-button"),
-  arUnavailable: $("ar-unavailable"),
-  arGate: $("ar-gate"),
-  progressFill: $("progress-fill"),
-  title: $("art-title"),
-  artist: $("art-artist"),
-  desc: $("art-desc"),
-  instruction: $("art-instruction"),
-  cta: $("art-cta"),
-  meta: $("art-meta"),
+  previewPhoto: $("preview-photo"),
+  previewImg: $("preview-img"),
+  artistName: $("artist-name"),
+  artistBio: $("artist-bio"),
+  artistLink: $("artist-link"),
+  linkMore: $("link-more"),
+  linkContact: $("link-contact"),
+  launch: $("launch"),
+  launchScrim: $("launch-scrim"),
+  launchClose: $("launch-close"),
+  launchFigure: $("launch-figure"),
+  launchImg: $("launch-img"),
+  launchGo: $("launch-go"),
+  lightbox: $("lightbox"),
+  lightboxImg: $("lightbox-img"),
+  lightboxClose: $("lightbox-close"),
 };
 
 const params = new URLSearchParams(location.search);
 
+let config = null;
+let parcours = null;
+let scannedIndex = 0;   // la balise du QR code
+let selectedIndex = 0;  // la balise consultée
+let activeOption = "infos";
+// On garde la position du visiteur, pas la distance : la distance dépend
+// de la balise consultée et doit être recalculée à chaque changement.
+let lastPosition = null;
+
 /* ------------------------------------------------------------- outils */
 
-/** Choisit un texte lisible (clair ou sombre) sur une couleur donnée. */
-function readableInk(hex) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || "").trim());
-  if (!m) return "#101114";
-  const n = parseInt(m[1], 16);
-  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  const lin = (c) => {
-    const s = c / 255;
-    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-  };
-  const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-  // 0,179 est le point où le contraste avec le noir et avec le blanc
-  // s'équilibrent. Au-dessus, le noir est plus lisible.
-  return L > 0.179 ? "#101114" : "#ffffff";
-}
-
-function setText(el, value) {
-  const v = (value || "").trim();
-  el.textContent = v;
-  el.hidden = v === "";
-}
+const setText = (el, v) => { el.textContent = (v || "").trim(); };
 
 function fail(message) {
   els.splash.hidden = true;
@@ -64,14 +72,10 @@ function fail(message) {
   els.error.hidden = false;
 }
 
-/** Distance en mètres entre deux points, formule de haversine. */
 function distanceMetres(a, b) {
-  const R = 6371000;
-  const rad = Math.PI / 180;
-  const dLat = (b.lat - a.lat) * rad;
-  const dLng = (b.lng - a.lng) * rad;
-  const s =
-    Math.sin(dLat / 2) ** 2 +
+  const R = 6371000, rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad, dLng = (b.lng - a.lng) * rad;
+  const s = Math.sin(dLat / 2) ** 2 +
     Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
 }
@@ -82,251 +86,379 @@ function formatDistance(m) {
   return `${(m / 1000).toFixed(1).replace(".", ",")} km`;
 }
 
-/** Des coordonnées à 0,0 signifient « emplacement pas encore choisi ». */
-function hasCoordinates(spot) {
-  const c = spot && spot.coordinates;
+function hasCoordinates(b) {
+  const c = b && b.coordinates;
   return !!c && typeof c.lat === "number" && typeof c.lng === "number" &&
     !(c.lat === 0 && c.lng === 0);
 }
 
-/* ------------------------------------------------------------- état */
+/** Itinéraire piéton, dans l'application de cartes du téléphone. */
+function itineraryUrl(c) {
+  const isApple = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent);
+  return isApple
+    ? `maps://?daddr=${c.lat},${c.lng}&dirflg=w`
+    : `https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}&travelmode=walking`;
+}
 
-let config = null;
-let currentSpot = null;
-let arrivedByQr = false;
-let watchId = null;
+const balise = (i) => parcours.balises[i];
+const selected = () => balise(selectedIndex);
+const isOnScannedBalise = () => selectedIndex === scannedIndex;
 
 /* ------------------------------------------------------------- rendu */
 
-function renderChannel(channel) {
-  const art = channel.artwork || {};
+function renderTabs() {
+  els.tabs.replaceChildren();
+  parcours.balises.forEach((b, i) => {
+    const t = document.createElement("button");
+    t.type = "button";
+    t.className = "tab";
+    t.textContent = b.label || `Balise ${b.numero}`;
+    t.setAttribute("aria-pressed", String(i === selectedIndex));
+    t.addEventListener("click", () => selectBalise(i));
+    els.tabs.append(t);
+  });
+}
 
-  const accent = channel.themeColor || "#e7e3da";
-  document.documentElement.style.setProperty("--accent", accent);
-  document.documentElement.style.setProperty("--on-accent", readableInk(accent));
-
-  els.viewer.setAttribute("src", art.modelUrl || "");
-
-  // Sans ios-src, model-viewer génère un USDZ à la volée — et cette
-  // génération ne gère pas les animations. On fournit donc le fichier.
-  if (art.iosModelUrl) {
-    els.viewer.setAttribute("ios-src", art.iosModelUrl);
-  } else {
-    els.viewer.removeAttribute("ios-src");
-  }
-
-  els.viewer.setAttribute(
-    "alt",
-    `${art.title || "Œuvre"}, ${art.artist || ""}`.trim()
+function syncTabs() {
+  [...els.tabs.children].forEach((t, i) =>
+    t.setAttribute("aria-pressed", String(i === selectedIndex))
   );
+}
 
-  setText(els.title, art.title);
-  setText(els.artist, art.artist);
-  setText(els.desc, art.description);
+function renderStates() {
+  const b = selected();
+  const art = b.artwork || {};
+  const artist = b.artist || {};
 
-  const marker = currentSpot && currentSpot.marker;
-  setText(
-    els.instruction,
-    [marker && marker.instruction, marker && marker.orientationHint]
-      .filter(Boolean)
-      .join(" ")
-  );
-
-  if (art.ctaUrl && art.ctaLabel) {
-    els.cta.href = art.ctaUrl;
-    els.cta.textContent = art.ctaLabel;
-    els.cta.rel = "noopener";
-    els.cta.hidden = false;
-  } else {
-    els.cta.hidden = true;
-  }
-
+  // 1. fiche technique
+  setText(els.artTitle, art.title);
+  setText(els.artDesc, art.description);
   const bits = [];
   if (art.heightMeters) {
     bits.push(`Hauteur réelle ${String(art.heightMeters).replace(".", ",")} m`);
   }
-  bits.push("Affichée à l'échelle 1:1");
   if (art.animated) bits.push("Œuvre animée");
-  els.meta.textContent = bits.join(" · ");
+  setText(els.artMeta, bits.join(" · "));
+
+  // 3. aperçu : la photo prime, le modèle 3D sinon
+  els.viewer.setAttribute("src", art.modelUrl || "");
+  if (art.iosModelUrl) els.viewer.setAttribute("ios-src", art.iosModelUrl);
+  else els.viewer.removeAttribute("ios-src");
+  els.viewer.setAttribute("alt", art.title || "Œuvre");
+
+  if (art.previewImage) {
+    els.previewImg.src = art.previewImage;
+    els.previewImg.alt = `${art.title || "L'œuvre"} vue sur le site`;
+    els.previewPhoto.hidden = false;
+  } else {
+    els.previewPhoto.hidden = true;
+  }
+
+  // 4. artiste
+  setText(els.artistName, artist.name);
+  setText(els.artistBio, artist.bio);
+  if (artist.linkUrl) {
+    els.artistLink.href = artist.linkUrl;
+    els.artistLink.textContent = artist.linkLabel || "Voir son travail";
+    els.artistLink.hidden = false;
+  } else {
+    els.artistLink.hidden = true;
+  }
+
+  renderNavState();
+  renderCta();
 }
 
-function renderChannels(channels) {
-  els.channels.replaceChildren();
+/** 2. navigation — dépend de la balise consultée et de la position. */
+function renderNavState() {
+  const b = selected();
+  const radius = config.defaults?.activationRadius ?? 25;
 
-  if (channels.length < 2) {
-    els.channels.hidden = true;
+  if (!hasCoordinates(b)) {
+    setText(els.navDistance, "Position non renseignée");
+    setText(els.navHint, "Les coordonnées de cette balise n'ont pas encore été définies dans la configuration.");
+    els.navGo.hidden = true;
     return;
   }
 
-  channels.forEach((channel, i) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "channel";
-    b.textContent = channel.label || channel.id;
-    b.setAttribute("aria-pressed", String(i === 0));
-    b.addEventListener("click", () => {
-      els.channels.querySelectorAll(".channel").forEach((other) =>
-        other.setAttribute("aria-pressed", String(other === b))
-      );
-      renderChannel(channel);
-    });
-    els.channels.append(b);
-  });
+  els.navGo.href = itineraryUrl(b.coordinates);
+  els.navGo.textContent = "Lancer l'itinéraire";
 
-  els.channels.hidden = false;
-}
+  const distance = lastPosition
+    ? distanceMetres(lastPosition, b.coordinates)
+    : null;
 
-/* --------------------------------------------- géolocalisation de découverte
-
-   Règle du cahier des charges : le scan du QR code est une preuve de
-   présence plus fiable que le GPS. Une arrivée par QR donne donc l'accès
-   complet, quoi que dise — ou ne dise pas — la géolocalisation.
-   L'expérience n'est jamais bloquée par une permission.
-------------------------------------------------------------------------- */
-
-function radii(spot) {
-  const d = (config && config.defaults) || {};
-  return {
-    activation: spot.activationRadius ?? d.activationRadius ?? 25,
-    discovery: spot.discoveryRadius ?? d.discoveryRadius ?? 150,
-  };
-}
-
-function applyProximity(metres) {
-  const { activation, discovery } = radii(currentSpot);
-  const d = formatDistance(metres);
-
-  let state, message;
-  if (metres <= activation) {
-    state = "sur-place";
-    message = "Vous y êtes.";
-  } else if (metres <= discovery) {
-    state = "a-proximite";
-    message = `L'œuvre est à ${d} d'ici.`;
-  } else {
-    state = "hors-zone";
-    message = `Vous êtes à ${d} de cet emplacement.`;
+  if (distance === null) {
+    setText(els.navDistance, "Localisation en cours…");
+    setText(els.navHint, "Autorisez la géolocalisation pour connaître votre distance à cette balise. Vous pouvez aussi lancer l'itinéraire directement.");
+    els.navGo.hidden = false;
+    return;
   }
 
-  els.proximity.dataset.state = state;
-  setText(els.proximity, message);
+  if (distance <= radius) {
+    setText(els.navDistance, "Vous êtes sur site");
+    setText(els.navHint, "L'œuvre peut être observée d'ici. Cherchez un point de vue dégagé avant de lancer l'expérience.");
+    els.navGo.hidden = true;
+  } else {
+    setText(els.navDistance, `À ${formatDistance(distance)}`);
+    setText(els.navHint, "Rapprochez-vous pour observer l'œuvre à son emplacement prévu.");
+    els.navGo.hidden = false;
+  }
 
-  // L'AR ne se ferme que pour un visiteur hors zone qui n'est pas
-  // arrivé par le QR code.
-  const gated = state === "hors-zone" && !arrivedByQr;
-  els.stage.dataset.gated = String(gated);
-  setText(
-    els.arGate,
-    gated
-      ? "La réalité augmentée s'ouvrira une fois sur place. L'œuvre reste " +
-        "visible et manipulable ci-dessus."
-      : ""
-  );
+  // La hauteur de cet état varie avec la géolocalisation : on réajuste.
+  if (activeOption === "nav") fitPanel();
 }
 
-function startGeolocation() {
-  if (!hasCoordinates(currentSpot)) return;
+/** Le bouton principal : lancer ici, ou s'y rendre. */
+function renderCta() {
+  const b = selected();
+  if (isOnScannedBalise()) {
+    els.ctaLabel.textContent = "Lancer l'expérience AR";
+    els.cta.disabled = false;
+    els.cta.dataset.action = "launch";
+  } else {
+    els.ctaLabel.textContent = `S'y rendre · ${b.label || "Balise " + b.numero}`;
+    els.cta.dataset.action = "route";
+    els.cta.disabled = !hasCoordinates(b);
+  }
+}
 
-  // Mode simulation : ?at=48.8679,2.3636 — pour tester sans se déplacer.
+/* La zone contextuelle épouse son contenu, sans jamais pousser la page
+   au-delà de l'écran. L'aperçu fait exception : il prend toute la place
+   disponible, parce qu'un modèle 3D à l'étroit ne se lit pas. */
+function fitPanel() {
+  const active = els.panel.querySelector(".state:not([hidden])");
+  if (!active) return;
+  const card = els.panel.parentElement;
+
+  // Mesure : on laisse l'encart et le panneau prendre toute la place
+  // disponible, pour connaître le plafond.
+  card.style.flex = "1 1 auto";
+  els.panel.style.flex = "1 1 auto";
+  els.panel.style.height = "";
+  const available = els.panel.clientHeight;
+
+  // L'aperçu garde toute la hauteur : un modèle 3D à l'étroit ne se lit pas.
+  if (activeOption === "preview") return;
+
+  // Un état est en position absolue, donc sa propre hauteur est celle du
+  // panneau : il faut mesurer la boîte de ses enfants, pas la sienne.
+  const kids = [...active.children].filter((k) => !k.hidden);
+  if (!kids.length) return;
+  const top = active.getBoundingClientRect().top;
+  const bottom = Math.max(...kids.map((k) => k.getBoundingClientRect().bottom));
+  const needed = bottom - top + parseFloat(getComputedStyle(active).paddingBottom);
+
+  // Contenu plus haut que la place libre : on reste étiré et c'est la zone
+  // contextuelle qui défile, jamais la page.
+  if (needed >= available) return;
+
+  card.style.flex = "0 1 auto";
+  els.panel.style.flex = "0 0 auto";
+  els.panel.style.height = Math.ceil(needed) + "px";
+
+  // Les rectangles sont fractionnaires : on laisse la mesure se corriger
+  // elle-même plutôt que d'ajouter une marge au jugé.
+  const over = active.scrollHeight - active.clientHeight;
+  if (over > 0) {
+    els.panel.style.height =
+      Math.min(available, Math.ceil(needed) + over) + "px";
+  }
+}
+
+function showOption(name) {
+  activeOption = name;
+  els.panel.querySelectorAll(".state").forEach((s) => {
+    s.hidden = s.dataset.state !== name;
+  });
+  els.options.querySelectorAll(".option").forEach((o) => {
+    o.setAttribute("aria-pressed", String(o.dataset.option === name));
+  });
+  fitPanel();
+}
+
+function selectBalise(i) {
+  selectedIndex = i;
+  syncTabs();
+  renderStates();
+  showOption(activeOption);
+}
+
+/* ----------------------------------------------------- géolocalisation */
+
+function startGeolocation() {
   const sim = params.get("at");
   if (sim) {
     const [lat, lng] = sim.split(",").map(Number);
     if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      applyProximity(distanceMetres({ lat, lng }, currentSpot.coordinates));
+      applyPosition({ lat, lng });
       return;
     }
   }
-
   if (!("geolocation" in navigator)) return;
 
-  // Suivi continu : c'est le déplacement qu'on veut observer, pas un point.
-  watchId = navigator.geolocation.watchPosition(
-    (pos) => {
-      applyProximity(
-        distanceMetres(
-          { lat: pos.coords.latitude, lng: pos.coords.longitude },
-          currentSpot.coordinates
-        )
-      );
-    },
-    () => {
-      // Refus, indisponibilité, délai dépassé : on ne dit rien et on ne
-      // bloque rien. Le visiteur garde l'expérience complète.
-      els.proximity.hidden = true;
-    },
+  navigator.geolocation.watchPosition(
+    (pos) => applyPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+    () => { lastPosition = null; renderNavState(); },
     { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
   );
 }
 
-/* -------------------------------------------------- disponibilité AR */
-
-async function checkAR() {
-  await customElements.whenDefined("model-viewer");
-  await new Promise((r) => setTimeout(r, 400));
-  els.arUnavailable.hidden = !!els.viewer.canActivateAR;
+function applyPosition(here) {
+  lastPosition = here;
+  renderNavState();
 }
 
-/* ------------------------------------------------------------ départ */
+/* ------------------------------------------------- fenêtre de lancement */
+
+function openLaunch() {
+  const b = selected();
+  if (b.referenceImage) {
+    els.launchImg.src = b.referenceImage;
+    els.launchFigure.hidden = false;
+  } else {
+    els.launchFigure.hidden = true;
+  }
+  els.launch.hidden = false;
+}
+
+const closeLaunch = () => { els.launch.hidden = true; };
+
+async function launchAR() {
+  closeLaunch();
+  try {
+    if (els.viewer.canActivateAR) await els.viewer.activateAR();
+    else alert("La réalité augmentée n'est pas disponible sur cet appareil. L'œuvre reste consultable dans l'onglet Aperçu.");
+  } catch (e) {
+    alert("La réalité augmentée n'a pas pu démarrer. Réessayez depuis l'onglet Aperçu.");
+  }
+}
+
+/* ------------------------------------------------------ agrandissement */
+
+function openLightbox(src, alt) {
+  els.lightboxImg.src = src;
+  els.lightboxImg.alt = alt || "";
+  els.lightbox.hidden = false;
+}
+
+const closeLightbox = () => { els.lightbox.hidden = true; };
+
+/* ------------------------------------------------------------- départ */
 
 async function start() {
   try {
     const res = await fetch("./config.json", { cache: "no-cache" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) throw new Error(String(res.status));
     config = await res.json();
-  } catch (e) {
+  } catch {
     fail("La configuration n'a pas pu être chargée. Vérifiez que config.json est bien en ligne.");
     return;
   }
 
-  const spots = config.spots || {};
-  const ids = Object.keys(spots);
-  if (ids.length === 0) {
-    fail("Aucun emplacement n'est défini dans config.json.");
+  const all = config.parcours || {};
+  const codes = Object.keys(all);
+  if (!codes.length) { fail("Aucun parcours n'est défini dans config.json."); return; }
+
+  const askedP = params.get("parcours");
+  if (askedP && !all[askedP]) {
+    fail(`Le parcours « ${askedP} » n'existe pas. Vérifiez le QR code.`);
+    return;
+  }
+  const code = askedP || codes[0];
+  parcours = all[code];
+
+  if (!parcours.balises || !parcours.balises.length) {
+    fail("Ce parcours ne contient aucune balise pour le moment.");
     return;
   }
 
-  const asked = params.get("spot");
-  if (asked && !spots[asked]) {
-    fail(`L'emplacement « ${asked} » n'existe pas. Vérifiez le QR code.`);
-    return;
+  const askedB = params.get("balise");
+  if (askedB) {
+    const i = parcours.balises.findIndex((b) => String(b.numero) === String(askedB));
+    if (i < 0) { fail(`La balise « ${askedB} » n'existe pas sur ce parcours.`); return; }
+    scannedIndex = i;
+  }
+  selectedIndex = scannedIndex;
+
+  const b = selected();
+  const title = config.app?.title || "Neo-Space";
+  document.title = `${title} — ${parcours.name || code}`;
+  els.appTitle.textContent = `« ${title} »`;
+  els.introSub.textContent =
+    `Vous avez activé la ${(b.label || "balise " + b.numero).toLowerCase()} du ${(parcours.name || "parcours " + code).toLowerCase()}`;
+  els.cardMeta.textContent =
+    `${parcours.name || "Parcours " + code} : réalisé par « ${parcours.creator || "—"} »`;
+
+  const links = { ...(config.defaults?.links || {}), ...(parcours.links || {}) };
+  for (const [key, el] of [["moreParcours", els.linkMore], ["contact", els.linkContact]]) {
+    const l = links[key] || {};
+    el.textContent = l.label || "";
+    if (l.url) { el.href = l.url; el.rel = "noopener"; el.removeAttribute("aria-disabled"); }
+    else el.setAttribute("aria-disabled", "true");
   }
 
-  arrivedByQr = Boolean(asked);
-  const id = asked || ids[0];
-
-  currentSpot = spots[id];
-  const channels = currentSpot.channels || [];
-  if (channels.length === 0) {
-    fail("Cet emplacement ne propose aucune œuvre pour le moment.");
-    return;
-  }
-
-  document.title =
-    `${currentSpot.name} — ${config.projectMeta?.title || "Galerie Urbaine"}`;
-  els.spotName.textContent = currentSpot.name || id;
-
-  renderChannels(channels);
-  renderChannel(channels[0]);
+  renderTabs();
+  renderStates();
+  showOption("infos");
 
   els.splash.hidden = true;
   els.app.hidden = false;
 
-  checkAR();
+  // La première mesure tombe avant que la mise en page soit stabilisée
+  // (polices, élément model-viewer pas encore défini). On la refait.
+  requestAnimationFrame(() => requestAnimationFrame(fitPanel));
+  if (document.fonts?.ready) document.fonts.ready.then(fitPanel);
+  customElements.whenDefined("model-viewer").then(fitPanel);
 
-  // Après l'affichage, jamais avant : une demande de permission en page
-  // d'accueil fait fuir le passant.
   startGeolocation();
 }
 
-/* ------------------------------------------------- barre de progression */
+/* ------------------------------------------------------------ écoutes */
 
-els.viewer.addEventListener("progress", (e) => {
-  const pct = Math.round((e.detail.totalProgress || 0) * 100);
-  els.progressFill.style.width = pct + "%";
+els.options.addEventListener("click", (e) => {
+  const o = e.target.closest(".option");
+  if (o) showOption(o.dataset.option);
+});
+
+els.cta.addEventListener("click", () => {
+  if (els.cta.dataset.action === "route") {
+    const b = selected();
+    if (hasCoordinates(b)) location.href = itineraryUrl(b.coordinates);
+  } else {
+    openLaunch();
+  }
+});
+
+els.launchGo.addEventListener("click", launchAR);
+els.launchClose.addEventListener("click", closeLaunch);
+els.launchScrim.addEventListener("click", closeLaunch);
+
+els.launchFigure.addEventListener("click", () =>
+  openLightbox(els.launchImg.src, els.launchImg.alt));
+els.previewPhoto.addEventListener("click", () =>
+  openLightbox(els.previewImg.src, els.previewImg.alt));
+
+els.lightboxClose.addEventListener("click", closeLightbox);
+els.lightbox.addEventListener("click", (e) => {
+  if (e.target === els.lightbox) closeLightbox();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (!els.lightbox.hidden) closeLightbox();
+  else if (!els.launch.hidden) closeLaunch();
 });
 
 els.viewer.addEventListener("error", () => {
-  fail("Le modèle 3D n'a pas pu être chargé. Vérifiez le chemin indiqué dans config.json.");
+  setText(els.artMeta, "Le modèle 3D n'a pas pu être chargé.");
+});
+
+// Rotation de l'écran, clavier logiciel, barre d'adresse qui se replie.
+let fitTimer;
+addEventListener("resize", () => {
+  clearTimeout(fitTimer);
+  fitTimer = setTimeout(fitPanel, 120);
 });
 
 start();
