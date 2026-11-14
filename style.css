@@ -46,23 +46,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 svg { width: 100%; height: 100%; fill: none; stroke: currentColor;
       stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 
-/* --------------------------------------------- fond teinté du haut
-
-   Un verre n'existe que par ce qu'il laisse voir au travers. Sur un
-   fond blanc, un titre de verre est invisible : cette nappe donne au
-   titre une matière à réfracter, et s'efface avant l'encart. */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 40svh;
-  background: linear-gradient(180deg,
-      #b3c3d8 0%, #cbd7e6 28%, #e4ebf2 60%, #f7f9fb 84%, #ffffff 100%);
-  z-index: 0;
-  pointer-events: none;
-}
 
 /* -------------------------------------------------- écran d'attente */
 
@@ -113,59 +96,82 @@ body::before {
 
 .intro { text-align: center; flex: 0 0 auto; }
 
+/* Le titre, d'un seul tenant, traversé d'une aurore.
+
+   Le principe de l'effet : des taches de couleur floutées tournent
+   derrière le texte, et un mode de fusion ne les laisse apparaître que
+   sur les lettres. L'exemple d'origine est sur fond noir avec un texte
+   clair et une fusion « darken » ; ici le fond est blanc et le texte
+   presque noir, donc la fusion s'inverse en « lighten ». Le résultat
+   est le même : la couleur ne mord que sur la typographie.
+
+   isolation + fond blanc : la fusion a besoin du blanc comme référence,
+   sinon les taches débordent du texte. */
 .intro__title {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;            /* sinon la couleur bave hors du texte */
+  display: inline-block;
   margin: 0;
+  padding: 2px 6px;
+  background: var(--bg);
+  color: #07090d;
   font-size: clamp(23px, 3.4svh, 31px);
   font-weight: 800;
   line-height: 1.18;
   letter-spacing: -0.02em;
 }
 
-/* Le nom de l'application, en verre épais.
+.intro__words { position: relative; }
 
-   Trois couches superposées sur les mêmes lettres : un corps presque
-   transparent qui laisse passer la nappe du fond, un contour sombre qui
-   dessine l'arête, et une pile d'ombres qui creuse l'épaisseur puis
-   pose l'objet au-dessus de la page. Le ::after ajoute le reflet. */
-.intro__app {
-  position: relative;
-  display: inline-block;
-  white-space: nowrap;
-  color: rgba(255, 255, 255, 0.12);
-  -webkit-text-stroke: 1.1px rgba(18, 28, 46, 0.46);
-  text-shadow:
-    0 -1.5px 0 rgba(255, 255, 255, 0.95),     /* arête éclairée du dessus */
-    0 1.5px 0 rgba(255, 255, 255, 0.42),      /* retour de lumière du dessous */
-    0 3px 1px rgba(12, 20, 36, 0.26),         /* épaisseur du verre */
-    0 6px 4px rgba(12, 20, 36, 0.18),
-    0 14px 20px rgba(12, 20, 36, 0.24);       /* ombre portée */
-  animation: flotte 6.5s ease-in-out infinite;
-}
-
-/* Le reflet : clair en haut, creux au milieu, rebond en bas. */
-.intro__app::after {
-  content: attr(data-text);
+.aurora {
   position: absolute;
-  left: 0;
-  top: 0;
-  -webkit-text-stroke: 0;
-  text-shadow: none;
-  background-image: linear-gradient(177deg,
-      rgba(255, 255, 255, 0.96) 3%,
-      rgba(255, 255, 255, 0.34) 30%,
-      rgba(255, 255, 255, 0) 43%,
-      rgba(255, 255, 255, 0) 63%,
-      rgba(255, 255, 255, 0.66) 88%,
-      rgba(255, 255, 255, 0.14) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  inset: 0;
+  mix-blend-mode: lighten;
   pointer-events: none;
 }
 
-@keyframes flotte {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50%      { transform: translateY(-3px) rotate(-0.25deg); }
+/* Des taches étroites, en couloirs : c'est leur séparation qui fait
+   l'aurore. Larges et très floues, elles se recouvrent toutes et le
+   titre vire à une seule couleur. Pas de fusion entre elles — leurs
+   bords flous suffisent à fondre une teinte dans l'autre. */
+.aurora__blob {
+  position: absolute;
+  top: -24%;
+  width: 36%;
+  height: 148%;
+  border-radius: 37% 29% 27% 27% / 28% 25% 41% 37%;
+  filter: blur(17px);
+  will-change: transform;
+}
+
+.aurora__blob--1 { left: -8%; background: #6a2ff0;
+  animation: aurore-1 11s ease-in-out infinite alternate; }
+
+.aurora__blob--2 { left: 19%; background: #1565d8;
+  animation: aurore-2 13s ease-in-out infinite alternate; }
+
+.aurora__blob--3 { left: 45%; background: #c2278b;
+  animation: aurore-3 9.5s ease-in-out infinite alternate; }
+
+.aurora__blob--4 { left: 71%; background: #0f8f7a;
+  animation: aurore-4 15s ease-in-out infinite alternate; }
+
+@keyframes aurore-1 {
+  from { transform: translate(-6%, 0) scale(1); }
+  to   { transform: translate(22%, 5%) scale(1.18); }
+}
+@keyframes aurore-2 {
+  from { transform: translate(10%, 3%) scale(1.12); }
+  to   { transform: translate(-16%, -4%) scale(0.94); }
+}
+@keyframes aurore-3 {
+  from { transform: translate(-12%, -3%) scale(0.96); }
+  to   { transform: translate(16%, 6%) scale(1.2); }
+}
+@keyframes aurore-4 {
+  from { transform: translate(8%, 0) scale(1.14); }
+  to   { transform: translate(-20%, -5%) scale(0.98); }
 }
 
 .intro__sub {
@@ -577,7 +583,8 @@ model-viewer {
 
 @media (prefers-reduced-motion: reduce) {
   .splash__mark { animation-duration: 3s; }
-  .intro__app { animation: none; }
   .sheet__panel { animation: none; }
   .state { transition: none; }
+  /* L'aurore se fige : les couleurs restent, le mouvement s'arrête. */
+  .aurora__blob { animation: none; }
 }

@@ -25,8 +25,16 @@
 <main id="app" class="app" hidden>
 
   <header class="intro">
+    <!-- Un seul et même titre. L'aurore passe par-dessus et ne se révèle
+         que sur les lettres, grâce au mode de fusion. -->
     <h1 class="intro__title">
-      bienvenue sur<br><span class="intro__app" id="app-title"></span>
+      <span class="intro__words">bienvenue sur<br><span id="app-title"></span></span>
+      <span class="aurora" aria-hidden="true">
+        <i class="aurora__blob aurora__blob--1"></i>
+        <i class="aurora__blob aurora__blob--2"></i>
+        <i class="aurora__blob aurora__blob--3"></i>
+        <i class="aurora__blob aurora__blob--4"></i>
+      </span>
     </h1>
     <p class="intro__sub" id="intro-sub"></p>
   </header>

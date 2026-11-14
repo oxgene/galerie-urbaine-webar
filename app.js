@@ -340,9 +340,7 @@ async function start() {
   const b = selected();
   const title = config.app?.title || "Neo-Space";
   document.title = `${title} — ${parcours.name || code}`;
-  // data-text alimente la couche de reflet du titre en verre (::after).
   els.appTitle.textContent = `« ${title} »`;
-  els.appTitle.dataset.text = `« ${title} »`;
   els.introSub.textContent =
     `Vous avez activé la ${(b.label || "balise " + b.numero).toLowerCase()} du ${(parcours.name || "parcours " + code).toLowerCase()}`;
   els.cardMeta.textContent =
