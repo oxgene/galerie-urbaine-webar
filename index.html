@@ -13,6 +13,10 @@
 
 <body>
 
+<!-- Pluie de cubes d'encre, derrière le titre. Dimensionnée et animée
+     par app.js, coupée à mi-hauteur du titre. -->
+<canvas id="rain" class="rain" aria-hidden="true"></canvas>
+
 <div id="splash" class="splash">
   <div class="splash__mark" aria-hidden="true"></div>
 </div>
@@ -35,12 +39,14 @@
     <span id="cta-label">Lancer l'expérience AR</span>
   </button>
 
-  <section class="card">
+  <div class="folder">
+
+    <!-- Menu 1 : les balises, en intercalaires. L'encart est la page. -->
+    <nav class="tabs" id="tabs-balises" aria-label="Balises du parcours"></nav>
+
+    <section class="card">
 
     <p class="card__meta" id="card-meta"></p>
-
-    <!-- Menu 1 : les balises du parcours -->
-    <nav class="tabs" id="tabs-balises" aria-label="Balises du parcours"></nav>
 
     <!-- Espace contextuel : quatre états, un seul visible -->
     <div class="panel" id="panel">
@@ -108,7 +114,8 @@
       </button>
     </nav>
 
-  </section>
+    </section>
+  </div>
 
   <footer class="foot">
     <a class="foot__link" id="link-more"></a>

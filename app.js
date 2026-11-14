@@ -204,9 +204,6 @@ function renderNavState() {
     setText(els.navHint, "Rapprochez-vous pour observer l'œuvre à son emplacement prévu.");
     els.navGo.hidden = false;
   }
-
-  // La hauteur de cet état varie avec la géolocalisation : on réajuste.
-  if (activeOption === "nav") fitPanel();
 }
 
 /** Le bouton principal : lancer ici, ou s'y rendre. */
@@ -223,49 +220,9 @@ function renderCta() {
   }
 }
 
-/* La zone contextuelle épouse son contenu, sans jamais pousser la page
-   au-delà de l'écran. L'aperçu fait exception : il prend toute la place
-   disponible, parce qu'un modèle 3D à l'étroit ne se lit pas. */
-function fitPanel() {
-  const active = els.panel.querySelector(".state:not([hidden])");
-  if (!active) return;
-  const card = els.panel.parentElement;
-
-  // Mesure : on laisse l'encart et le panneau prendre toute la place
-  // disponible, pour connaître le plafond.
-  card.style.flex = "1 1 auto";
-  els.panel.style.flex = "1 1 auto";
-  els.panel.style.height = "";
-  const available = els.panel.clientHeight;
-
-  // L'aperçu garde toute la hauteur : un modèle 3D à l'étroit ne se lit pas.
-  if (activeOption === "preview") return;
-
-  // Un état est en position absolue, donc sa propre hauteur est celle du
-  // panneau : il faut mesurer la boîte de ses enfants, pas la sienne.
-  const kids = [...active.children].filter((k) => !k.hidden);
-  if (!kids.length) return;
-  const top = active.getBoundingClientRect().top;
-  const bottom = Math.max(...kids.map((k) => k.getBoundingClientRect().bottom));
-  const needed = bottom - top + parseFloat(getComputedStyle(active).paddingBottom);
-
-  // Contenu plus haut que la place libre : on reste étiré et c'est la zone
-  // contextuelle qui défile, jamais la page.
-  if (needed >= available) return;
-
-  card.style.flex = "0 1 auto";
-  els.panel.style.flex = "0 0 auto";
-  els.panel.style.height = Math.ceil(needed) + "px";
-
-  // Les rectangles sont fractionnaires : on laisse la mesure se corriger
-  // elle-même plutôt que d'ajouter une marge au jugé.
-  const over = active.scrollHeight - active.clientHeight;
-  if (over > 0) {
-    els.panel.style.height =
-      Math.min(available, Math.ceil(needed) + over) + "px";
-  }
-}
-
+/* La zone contextuelle garde une hauteur constante, quel que soit son
+   contenu : c'est ce qui immobilise la barre d'options en bas de l'écran.
+   Un contenu trop long défile à l'intérieur, jamais la page. */
 function showOption(name) {
   activeOption = name;
   els.panel.querySelectorAll(".state").forEach((s) => {
@@ -274,7 +231,6 @@ function showOption(name) {
   els.options.querySelectorAll(".option").forEach((o) => {
     o.setAttribute("aria-pressed", String(o.dataset.option === name));
   });
-  fitPanel();
 }
 
 function selectBalise(i) {
@@ -344,6 +300,108 @@ function openLightbox(src, alt) {
 
 const closeLightbox = () => { els.lightbox.hidden = true; };
 
+/* --------------------------------------------- pluie de cubes d'encre
+
+   Une fine pluie de cubes, du sommet de l'écran à mi-hauteur du titre.
+   Noire en haut, elle s'éclaircit et s'efface en descendant. Le nombre
+   de particules suit la largeur de l'écran, et l'animation s'arrête dès
+   que l'onglet passe en arrière-plan : un effet d'ambiance ne doit pas
+   coûter de batterie à quelqu'un debout dans la rue.
+------------------------------------------------------------------------ */
+
+function startRain() {
+  const cv = $("rain");
+  if (!cv || !cv.getContext) return;
+  const ctx = cv.getContext("2d");
+  const sobre = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let w = 0, h = 0, cubes = [], raf = null, last = 0;
+
+  const neuf = (y) => ({
+    x: Math.random() * w,
+    y,
+    taille: 1.5 + Math.random() * 3.2,
+    chute: 10 + Math.random() * 26,
+    phase: Math.random() * Math.PI * 2,
+    angle: Math.random() * Math.PI,
+    tour: (Math.random() - 0.5) * 1.1,
+  });
+
+  /** Du haut de l'écran à mi-hauteur du titre, exactement. */
+  function hauteurBande() {
+    const t = document.querySelector(".intro__title");
+    if (!t) return 0;
+    const r = t.getBoundingClientRect();
+    return Math.round(r.top + r.height / 2);
+  }
+
+  function redimensionner() {
+    h = hauteurBande();
+    w = window.innerWidth;
+    if (h <= 0 || w <= 0) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.style.height = h + "px";
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.max(20, Math.min(58, Math.round(w / 7)));
+    cubes = Array.from({ length: n }, () => neuf(Math.random() * h));
+  }
+
+  function dessiner() {
+    ctx.clearRect(0, 0, w, h);
+    for (const c of cubes) {
+      const x = c.x + Math.sin(c.phase) * 14;   // balancement, neige au vent
+      const k = Math.min(1, Math.max(0, c.y / h));
+      const g = Math.round(k * 190);            // noir en haut, gris clair en bas
+      ctx.save();
+      ctx.translate(x, c.y);
+      ctx.rotate(c.angle);
+      ctx.fillStyle = `rgba(${g}, ${g}, ${g + 6}, ${1 - k * 0.78})`;
+      ctx.fillRect(-c.taille / 2, -c.taille / 2, c.taille, c.taille);
+      ctx.restore();
+    }
+  }
+
+  function image(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    for (const c of cubes) {
+      c.y += c.chute * dt;
+      c.phase += dt * 1.3;
+      c.angle += c.tour * dt;
+      if (c.y - c.taille > h) Object.assign(c, neuf(-c.taille));
+    }
+    dessiner();
+    raf = requestAnimationFrame(image);
+  }
+
+  function jouer() {
+    if (raf || sobre) return;
+    last = performance.now();
+    raf = requestAnimationFrame(image);
+  }
+
+  function pause() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+  }
+
+  redimensionner();
+  if (sobre) dessiner();       // une image fixe, sans mouvement
+  else jouer();
+
+  document.addEventListener("visibilitychange", () =>
+    document.hidden ? pause() : jouer()
+  );
+
+  let minuteur;
+  window.addEventListener("resize", () => {
+    clearTimeout(minuteur);
+    minuteur = setTimeout(() => { redimensionner(); if (sobre) dessiner(); }, 150);
+  });
+}
+
 /* ------------------------------------------------------------- départ */
 
 async function start() {
@@ -405,12 +463,7 @@ async function start() {
   els.splash.hidden = true;
   els.app.hidden = false;
 
-  // La première mesure tombe avant que la mise en page soit stabilisée
-  // (polices, élément model-viewer pas encore défini). On la refait.
-  requestAnimationFrame(() => requestAnimationFrame(fitPanel));
-  if (document.fonts?.ready) document.fonts.ready.then(fitPanel);
-  customElements.whenDefined("model-viewer").then(fitPanel);
-
+  startRain();
   startGeolocation();
 }
 
@@ -452,13 +505,6 @@ document.addEventListener("keydown", (e) => {
 
 els.viewer.addEventListener("error", () => {
   setText(els.artMeta, "Le modèle 3D n'a pas pu être chargé.");
-});
-
-// Rotation de l'écran, clavier logiciel, barre d'adresse qui se replie.
-let fitTimer;
-addEventListener("resize", () => {
-  clearTimeout(fitTimer);
-  fitTimer = setTimeout(fitPanel, 120);
 });
 
 start();
