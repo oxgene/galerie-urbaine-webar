@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="148mm" height="210mm" viewBox="0 0 148 210">
+
+  <!-- ================================================================
+       Plaque QR — Galerie Urbaine
+       Format A5 (148 × 210 mm), à poser verticalement : mur, poteau,
+       totem. Le QR code ne va pas au sol, où il serait piétiné.
+       L'emplacement du code est réservé, à remplir avec le vôtre.
+       ================================================================ -->
+
+  <rect width="148" height="210" fill="#ffffff"/>
+
+  <g font-family="Helvetica, Arial, sans-serif" fill="#111111">
+
+    <text x="74" y="26" text-anchor="middle" font-size="7.5"
+          font-weight="700" letter-spacing="1.6">GALERIE URBAINE</text>
+    <text x="74" y="37" text-anchor="middle" font-size="4.6" fill="#555555">
+      Une œuvre est installée ici, en réalité augmentée.
+    </text>
+
+    <!-- Zone réservée au QR code -->
+    <rect x="29" y="52" width="90" height="90" fill="none"
+          stroke="#cccccc" stroke-width="0.5" stroke-dasharray="3 2"/>
+    <text x="74" y="92" text-anchor="middle" font-size="4.6" fill="#999999">
+      COLLEZ ICI VOTRE QR CODE
+    </text>
+    <text x="74" y="100" text-anchor="middle" font-size="4" fill="#999999">
+      90 × 90 mm
+    </text>
+    <text x="74" y="110" text-anchor="middle" font-size="3.6" fill="#bbbbbb">
+      encodant ?spot=spot-01
+    </text>
+
+    <!-- Équerres de repérage du QR -->
+    <g fill="none" stroke="#111111" stroke-width="0.7">
+      <path d="M29 60 V52 H37"/>
+      <path d="M111 52 H119 V60"/>
+      <path d="M119 134 V142 H111"/>
+      <path d="M37 142 H29 V134"/>
+    </g>
+
+    <!-- Marche à suivre -->
+    <text x="29" y="160" font-size="5.2" font-weight="700">1.</text>
+    <text x="37" y="160" font-size="5.2">Scannez le code avec votre téléphone</text>
+
+    <text x="29" y="170" font-size="5.2" font-weight="700">2.</text>
+    <text x="37" y="170" font-size="5.2">Touchez « Voir dans la rue »</text>
+
+    <text x="29" y="180" font-size="5.2" font-weight="700">3.</text>
+    <text x="37" y="180" font-size="5.2">Posez l'œuvre sur le cercle au sol</text>
+
+    <line x1="29" y1="190" x2="119" y2="190" stroke="#dddddd" stroke-width="0.4"/>
+    <text x="74" y="198" text-anchor="middle" font-size="4" fill="#777777">
+      Aucune application à installer
+    </text>
+  </g>
+
+  <!-- Marques de coupe -->
+  <g fill="none" stroke="#111111" stroke-width="0.4">
+    <path d="M4 4 H12 M4 4 V12"/>
+    <path d="M144 4 H136 M144 4 V12"/>
+    <path d="M4 206 H12 M4 206 V198"/>
+    <path d="M144 206 H136 M144 206 V198"/>
+  </g>
+</svg>

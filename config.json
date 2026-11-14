@@ -1,7 +1,7 @@
 {
   "projectMeta": {
     "title": "Galerie Urbaine",
-    "version": "3.0-MVP-noyau"
+    "version": "3.0-MVP"
   },
   "defaults": {
     "discoveryRadius": 150,
@@ -14,6 +14,7 @@
         "lat": 0,
         "lng": 0
       },
+      "discoveryRadius": 150,
       "activationRadius": 25,
       "marker": {
         "instruction": "Posez l'œuvre sur le repère au sol.",
@@ -33,6 +34,22 @@
             "animated": true,
             "heightMeters": 2.4,
             "ctaLabel": "En savoir plus",
+            "ctaUrl": "https://example.com"
+          }
+        },
+        {
+          "id": "canal-partenaire",
+          "label": "Canal Partenaire",
+          "themeColor": "#C98A3E",
+          "artwork": {
+            "title": "Lame #02",
+            "artist": "Modèle de substitution",
+            "description": "Second volume de test, statique et de proportions opposées au premier, pour que la bascule entre canaux soit lisible d'un coup d'œil.",
+            "modelUrl": "./assets/models/lame_partenaire.glb",
+            "iosModelUrl": "./assets/models/lame_partenaire.usdz",
+            "animated": false,
+            "heightMeters": 1.8,
+            "ctaLabel": "Découvrir",
             "ctaUrl": "https://example.com"
           }
         }

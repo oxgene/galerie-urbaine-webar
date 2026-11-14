@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="800mm" height="800mm" viewBox="0 0 800 800">
+
+  <!-- ================================================================
+       Gabarit de marquage au sol — Galerie Urbaine
+       Échelle réelle : 800 × 800 mm. À imprimer en grand format, ou à
+       reporter à la craie / au pochoir.
+
+       Une seule idée : ce cercle est l'emplacement de l'ŒUVRE.
+       Le visiteur le vise, il ne se tient pas dedans. Le triangle
+       indique vers où l'œuvre est tournée.
+
+       Base de travail neutre, à habiller selon la direction artistique.
+       ================================================================ -->
+
+  <rect width="800" height="800" fill="#ffffff"/>
+
+  <g fill="none" stroke="#111111" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Limite de la zone de pose -->
+    <circle cx="400" cy="400" r="370" stroke-width="10"/>
+
+    <!-- Repère d'orientation : le dos de l'œuvre est de ce côté -->
+    <path d="M400 46 L452 122 L348 122 Z" stroke-width="8"/>
+
+    <!-- Croix de centrage, dégagée de tout texte -->
+    <path d="M352 400 H448 M400 352 V448" stroke-width="5"/>
+    <circle cx="400" cy="400" r="26" stroke-width="4"/>
+
+    <!-- Marques de coupe -->
+    <path d="M14 14 H64 M14 14 V64" stroke-width="4"/>
+    <path d="M786 14 H736 M786 14 V64" stroke-width="4"/>
+    <path d="M14 786 H64 M14 786 V736" stroke-width="4"/>
+    <path d="M786 786 H736 M786 786 V736" stroke-width="4"/>
+  </g>
+
+  <g fill="#111111" text-anchor="middle"
+     font-family="Helvetica, Arial, sans-serif">
+
+    <!-- Sous le triangle -->
+    <text x="400" y="168" font-size="22" font-weight="700"
+          letter-spacing="4">SENS DE L'ŒUVRE</text>
+
+    <!-- Au-dessus de la croix -->
+    <text x="400" y="288" font-size="38" font-weight="700"
+          letter-spacing="2">POSEZ L'ŒUVRE</text>
+    <text x="400" y="330" font-size="38" font-weight="700"
+          letter-spacing="2">AU CENTRE</text>
+
+    <!-- Sous la croix -->
+    <text x="400" y="516" font-size="25">Scannez le QR code,</text>
+    <text x="400" y="550" font-size="25">puis visez ce cercle.</text>
+
+    <text x="400" y="648" font-size="20" fill="#666666"
+          letter-spacing="1">galerie-urbaine-webar.pages.dev</text>
+  </g>
+
+  <!-- Mention technique, dans l'angle libre. À retirer avant impression
+       définitive. Cercle ⌀ 740 mm, gabarit 800 × 800 mm. -->
+  <text x="72" y="48" fill="#999999"
+        font-family="Helvetica, Arial, sans-serif" font-size="14">800 × 800 mm — 1:1</text>
+</svg>

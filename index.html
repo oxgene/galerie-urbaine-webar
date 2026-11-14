@@ -30,12 +30,13 @@
   <header class="place">
     <p class="place__label">Vous êtes à</p>
     <h1 class="place__name" id="spot-name"></h1>
+    <p class="proximity" id="proximity" hidden></p>
   </header>
 
   <!-- Sélecteur de canaux : masqué tant qu'il n'y a qu'un seul canal -->
   <nav class="channels" id="channels" aria-label="Canaux thématiques" hidden></nav>
 
-  <section class="stage">
+  <section class="stage" id="stage">
     <model-viewer
       id="viewer"
       alt=""
@@ -63,18 +64,21 @@
       </div>
     </model-viewer>
 
-    <p class="ar-unavailable" id="ar-unavailable" hidden>
+    <p class="notice" id="ar-unavailable" hidden>
       La réalité augmentée n'est pas disponible sur cet appareil.
       L'œuvre reste visible et manipulable ci-dessus.
     </p>
+
+    <p class="notice" id="ar-gate" hidden></p>
   </section>
+
+  <!-- Consigne de pose : juste avant le geste, pas en bas de page -->
+  <p class="instruction" id="art-instruction" hidden></p>
 
   <section class="sheet">
     <h2 class="sheet__title" id="art-title"></h2>
     <p class="sheet__artist" id="art-artist"></p>
     <p class="sheet__desc" id="art-desc"></p>
-
-    <p class="sheet__instruction" id="art-instruction" hidden></p>
 
     <a class="cta" id="art-cta" hidden></a>
 

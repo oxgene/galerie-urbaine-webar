@@ -115,6 +115,26 @@ body {
   line-height: 1.3;
 }
 
+/* --------------------------------------------------------- proximité */
+
+.proximity {
+  display: inline-block;
+  margin: 10px 0 0;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.proximity[data-state="sur-place"] {
+  border-color: var(--accent);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.proximity[data-state="a-proximite"] { color: var(--text); }
+
 /* ------------------------------------------------------------ canaux */
 
 .channels {
@@ -187,6 +207,10 @@ model-viewer {
 
 .ar-button:active { transform: translateX(-50%) scale(0.97); }
 
+/* Visiteur hors zone qui n'est pas arrivé par le QR code : pas de bouton,
+   mais l'œuvre reste consultable en 3D. */
+.stage[data-gated="true"] .ar-button { display: none; }
+
 .ar-button__icon {
   width: 16px;
   height: 16px;
@@ -195,7 +219,7 @@ model-viewer {
   transform: rotate(45deg);
 }
 
-.ar-unavailable {
+.notice {
   margin: 14px 2px 0;
   color: var(--muted);
   font-size: 13px;
@@ -244,8 +268,9 @@ model-viewer {
   font-size: 16px;
 }
 
-.sheet__instruction {
-  margin: 0 0 20px;
+/* Consigne de pose, placée juste avant le geste */
+.instruction {
+  margin: 0 0 26px;
   padding: 14px 16px;
   border-left: 2px solid var(--accent);
   background: var(--surface);
