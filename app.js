@@ -300,108 +300,6 @@ function openLightbox(src, alt) {
 
 const closeLightbox = () => { els.lightbox.hidden = true; };
 
-/* --------------------------------------------- pluie de cubes d'encre
-
-   Une fine pluie de cubes, du sommet de l'écran à mi-hauteur du titre.
-   Noire en haut, elle s'éclaircit et s'efface en descendant. Le nombre
-   de particules suit la largeur de l'écran, et l'animation s'arrête dès
-   que l'onglet passe en arrière-plan : un effet d'ambiance ne doit pas
-   coûter de batterie à quelqu'un debout dans la rue.
------------------------------------------------------------------------- */
-
-function startRain() {
-  const cv = $("rain");
-  if (!cv || !cv.getContext) return;
-  const ctx = cv.getContext("2d");
-  const sobre = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  let w = 0, h = 0, cubes = [], raf = null, last = 0;
-
-  const neuf = (y) => ({
-    x: Math.random() * w,
-    y,
-    taille: 1.5 + Math.random() * 3.2,
-    chute: 10 + Math.random() * 26,
-    phase: Math.random() * Math.PI * 2,
-    angle: Math.random() * Math.PI,
-    tour: (Math.random() - 0.5) * 1.1,
-  });
-
-  /** Du haut de l'écran à mi-hauteur du titre, exactement. */
-  function hauteurBande() {
-    const t = document.querySelector(".intro__title");
-    if (!t) return 0;
-    const r = t.getBoundingClientRect();
-    return Math.round(r.top + r.height / 2);
-  }
-
-  function redimensionner() {
-    h = hauteurBande();
-    w = window.innerWidth;
-    if (h <= 0 || w <= 0) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    cv.style.height = h + "px";
-    cv.width = Math.round(w * dpr);
-    cv.height = Math.round(h * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const n = Math.max(20, Math.min(58, Math.round(w / 7)));
-    cubes = Array.from({ length: n }, () => neuf(Math.random() * h));
-  }
-
-  function dessiner() {
-    ctx.clearRect(0, 0, w, h);
-    for (const c of cubes) {
-      const x = c.x + Math.sin(c.phase) * 14;   // balancement, neige au vent
-      const k = Math.min(1, Math.max(0, c.y / h));
-      const g = Math.round(k * 190);            // noir en haut, gris clair en bas
-      ctx.save();
-      ctx.translate(x, c.y);
-      ctx.rotate(c.angle);
-      ctx.fillStyle = `rgba(${g}, ${g}, ${g + 6}, ${1 - k * 0.78})`;
-      ctx.fillRect(-c.taille / 2, -c.taille / 2, c.taille, c.taille);
-      ctx.restore();
-    }
-  }
-
-  function image(now) {
-    const dt = Math.min(0.05, (now - last) / 1000);
-    last = now;
-    for (const c of cubes) {
-      c.y += c.chute * dt;
-      c.phase += dt * 1.3;
-      c.angle += c.tour * dt;
-      if (c.y - c.taille > h) Object.assign(c, neuf(-c.taille));
-    }
-    dessiner();
-    raf = requestAnimationFrame(image);
-  }
-
-  function jouer() {
-    if (raf || sobre) return;
-    last = performance.now();
-    raf = requestAnimationFrame(image);
-  }
-
-  function pause() {
-    if (raf) cancelAnimationFrame(raf);
-    raf = null;
-  }
-
-  redimensionner();
-  if (sobre) dessiner();       // une image fixe, sans mouvement
-  else jouer();
-
-  document.addEventListener("visibilitychange", () =>
-    document.hidden ? pause() : jouer()
-  );
-
-  let minuteur;
-  window.addEventListener("resize", () => {
-    clearTimeout(minuteur);
-    minuteur = setTimeout(() => { redimensionner(); if (sobre) dessiner(); }, 150);
-  });
-}
-
 /* ------------------------------------------------------------- départ */
 
 async function start() {
@@ -442,7 +340,9 @@ async function start() {
   const b = selected();
   const title = config.app?.title || "Neo-Space";
   document.title = `${title} — ${parcours.name || code}`;
+  // data-text alimente la couche de reflet du titre en verre (::after).
   els.appTitle.textContent = `« ${title} »`;
+  els.appTitle.dataset.text = `« ${title} »`;
   els.introSub.textContent =
     `Vous avez activé la ${(b.label || "balise " + b.numero).toLowerCase()} du ${(parcours.name || "parcours " + code).toLowerCase()}`;
   els.cardMeta.textContent =
@@ -463,7 +363,6 @@ async function start() {
   els.splash.hidden = true;
   els.app.hidden = false;
 
-  startRain();
   startGeolocation();
 }
 
