@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Galerie Urbaine</title>
+<meta name="description" content="Une galerie d'art en réalité augmentée, dans l'espace public.">
+<meta name="theme-color" content="#101114">
+<link rel="stylesheet" href="./style.css">
+<!-- Pour changer de version, voir la section « Mettre à jour model-viewer » du README. -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.2.0/dist/model-viewer.min.js"></script>
+</head>
+
+<body>
+
+<!-- Écran d'attente, masqué dès que la configuration est chargée -->
+<div id="splash" class="splash">
+  <div class="splash__mark" aria-hidden="true"></div>
+  <p class="splash__text">Chargement de l'œuvre…</p>
+</div>
+
+<!-- Écran d'erreur -->
+<div id="error" class="error" hidden>
+  <h1 class="error__title">Œuvre introuvable</h1>
+  <p class="error__text" id="error-text"></p>
+</div>
+
+<main id="app" class="app" hidden>
+
+  <header class="place">
+    <p class="place__label">Vous êtes à</p>
+    <h1 class="place__name" id="spot-name"></h1>
+  </header>
+
+  <!-- Sélecteur de canaux : masqué tant qu'il n'y a qu'un seul canal -->
+  <nav class="channels" id="channels" aria-label="Canaux thématiques" hidden></nav>
+
+  <section class="stage">
+    <model-viewer
+      id="viewer"
+      alt=""
+      ar
+      ar-modes="webxr scene-viewer quick-look"
+      ar-scale="fixed"
+      ar-placement="floor"
+      xr-environment
+      quick-look-browsers="safari chrome"
+      camera-controls
+      touch-action="pan-y"
+      shadow-intensity="1"
+      shadow-softness="0.8"
+      environment-image="neutral"
+      exposure="1"
+      loading="eager">
+
+      <button class="ar-button" slot="ar-button" id="ar-button">
+        <span class="ar-button__icon" aria-hidden="true"></span>
+        Voir dans la rue
+      </button>
+
+      <div class="progress" slot="progress-bar">
+        <div class="progress__fill" id="progress-fill"></div>
+      </div>
+    </model-viewer>
+
+    <p class="ar-unavailable" id="ar-unavailable" hidden>
+      La réalité augmentée n'est pas disponible sur cet appareil.
+      L'œuvre reste visible et manipulable ci-dessus.
+    </p>
+  </section>
+
+  <section class="sheet">
+    <h2 class="sheet__title" id="art-title"></h2>
+    <p class="sheet__artist" id="art-artist"></p>
+    <p class="sheet__desc" id="art-desc"></p>
+
+    <p class="sheet__instruction" id="art-instruction" hidden></p>
+
+    <a class="cta" id="art-cta" hidden></a>
+
+    <p class="sheet__meta" id="art-meta"></p>
+  </section>
+
+</main>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

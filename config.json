@@ -1,0 +1,42 @@
+{
+  "projectMeta": {
+    "title": "Galerie Urbaine",
+    "version": "3.0-MVP-noyau"
+  },
+  "defaults": {
+    "discoveryRadius": 150,
+    "activationRadius": 25
+  },
+  "spots": {
+    "spot-01": {
+      "name": "Emplacement de test",
+      "coordinates": {
+        "lat": 0,
+        "lng": 0
+      },
+      "activationRadius": 25,
+      "marker": {
+        "instruction": "Posez l'œuvre sur le repère au sol.",
+        "orientationHint": "Reculez de quelques pas pour la voir en entier."
+      },
+      "channels": [
+        {
+          "id": "canal-art",
+          "label": "Canal Art",
+          "themeColor": "#E7E3DA",
+          "artwork": {
+            "title": "Monolith #01",
+            "artist": "Modèle de substitution",
+            "description": "Volume de test généré pour valider la chaîne technique : échelle métrique, pivot au sol, rotation en boucle. À remplacer par votre première œuvre.",
+            "modelUrl": "./assets/models/monolith_art.glb",
+            "iosModelUrl": "./assets/models/monolith_art.usdz",
+            "animated": true,
+            "heightMeters": 2.4,
+            "ctaLabel": "En savoir plus",
+            "ctaUrl": "https://example.com"
+          }
+        }
+      ]
+    }
+  }
+}

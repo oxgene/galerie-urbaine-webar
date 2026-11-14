@@ -1,0 +1,17 @@
+# Cloudflare Pages — en-têtes HTTP
+#
+# Quick Look (iOS) refuse d'ouvrir un .usdz qui n'est pas servi avec ce
+# type MIME exact. Sans cette règle, le bouton « Voir dans la rue » reste
+# sans effet sur iPhone, et sans message d'erreur.
+
+/*.usdz
+  Content-Type: model/vnd.usdz+zip
+
+/*.glb
+  Content-Type: model/gltf-binary
+
+/assets/models/*
+  Cache-Control: public, max-age=86400
+
+/config.json
+  Cache-Control: no-cache
