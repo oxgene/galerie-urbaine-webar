@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Neo-Space</title>
+<title>a.r.t.</title>
 <meta name="description" content="Une galerie d'art en réalité augmentée, dans l'espace public.">
 <meta name="theme-color" content="#ffffff">
 <link rel="stylesheet" href="./style.css">
@@ -25,18 +25,10 @@
 <main id="app" class="app" hidden>
 
   <header class="intro">
-    <!-- Un seul et même titre. L'aurore passe par-dessus et ne se révèle
-         que sur les lettres, grâce au mode de fusion. -->
-    <h1 class="intro__title">
-      <span class="intro__words">bienvenue sur<br><span id="app-title"></span></span>
-      <span class="aurora" aria-hidden="true">
-        <i class="aurora__blob aurora__blob--1"></i>
-        <i class="aurora__blob aurora__blob--2"></i>
-        <i class="aurora__blob aurora__blob--3"></i>
-        <i class="aurora__blob aurora__blob--4"></i>
-        <i class="aurora__blob aurora__blob--5"></i>
-      </span>
-    </h1>
+    <!-- Un logotype, pas une phrase : le nom, sa baseline, puis la ligne
+         de contexte. Les trois textes se distinguent par l'échelle seule. -->
+    <h1 class="intro__title" id="app-title">a.r.t.</h1>
+    <p class="intro__tagline" id="app-tagline">voyons le monde différemment</p>
     <p class="intro__sub" id="intro-sub"></p>
   </header>
 

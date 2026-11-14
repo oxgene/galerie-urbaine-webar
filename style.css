@@ -22,6 +22,13 @@
 
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
           "Helvetica Neue", Arial, sans-serif;
+
+  /* Police du titre. Les familles système d'abord : elles possèdent une
+     vraie graisse 900 (SF Pro sur iOS, Roboto sur Android), là où une
+     Helvetica Neue obligerait le navigateur à grossir les traits
+     lui-même — et ça se voit. */
+  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI Variable",
+                  Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -96,104 +103,37 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor;
 
 .intro { text-align: center; flex: 0 0 auto; }
 
-/* Le titre, d'un seul tenant, traversé d'une aurore.
+/* Le titre : un signe, pas une phrase.
 
-   Le principe de l'effet : des taches de couleur floutées tournent
-   derrière le texte, et un mode de fusion ne les laisse apparaître que
-   sur les lettres. L'exemple d'origine est sur fond noir avec un texte
-   clair et une fusion « darken » ; ici le fond est blanc et le texte
-   presque noir, donc la fusion s'inverse en « lighten ». Le résultat
-   est le même : la couleur ne mord que sur la typographie.
+   Parti pris typographique brutaliste — le grotesque le plus gras que
+   la machine possède, interlettrage très serré, noir sur blanc, aucun
+   effet. Toute la tension vient du rapport d'échelle entre le nom et
+   sa baseline ; rien n'est ajouté pour « faire joli ».
 
-   isolation + fond blanc : la fusion a besoin du blanc comme référence,
-   sinon les taches débordent du texte. */
+   Pour aller plus loin : déposer un vrai grotesque (Space Grotesk,
+   Archivo Black, une Helvetica) et le déclarer dans --font-display.
+   C'est le seul endroit à changer. */
 .intro__title {
-  /* Palette de l'aurore, du plus sombre au plus clair. */
-  --aur-1: #000308;
-  --aur-2: #00143d;
-  --aur-3: #013c73;
-  --aur-4: #0f78ad;
-  --aur-5: #40a0c9;
-  --aur-6: #a0bfd2;
-
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;            /* sinon la couleur bave hors du texte */
-  display: inline-block;
   margin: 0;
-  padding: 2px 6px;
-  background: var(--bg);
-  color: var(--aur-1);
-  font-size: clamp(23px, 3.4svh, 31px);
-  font-weight: 800;
-  line-height: 1.18;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: clamp(40px, 7.4svh, 62px);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  color: var(--ink);
 }
 
-.intro__words { position: relative; }
-
-.aurora {
-  position: absolute;
-  inset: 0;
-  mix-blend-mode: lighten;
-  pointer-events: none;
-}
-
-/* Des taches étroites, en couloirs : c'est leur séparation qui fait
-   l'aurore. Larges et très floues, elles se recouvrent toutes et le
-   titre vire à une seule couleur. Pas de fusion entre elles — leurs
-   bords flous suffisent à fondre une teinte dans l'autre. */
-.aurora__blob {
-  position: absolute;
-  top: -24%;
-  width: 36%;
-  height: 148%;
-  border-radius: 37% 29% 27% 27% / 28% 25% 41% 37%;
-  filter: blur(17px);
-  will-change: transform;
-}
-
-.aurora__blob--1 { left: -10%; background: var(--aur-2);
-  animation: aurore-1 11s ease-in-out infinite alternate; }
-
-.aurora__blob--2 { left: 14%; background: var(--aur-4);
-  animation: aurore-2 13s ease-in-out infinite alternate; }
-
-.aurora__blob--3 { left: 40%; background: var(--aur-3);
-  animation: aurore-3 9.5s ease-in-out infinite alternate; }
-
-.aurora__blob--4 { left: 64%; background: var(--aur-5);
-  animation: aurore-4 15s ease-in-out infinite alternate; }
-
-/* La teinte la plus claire ne tient pas le contraste en aplat : elle
-   passe en voile, pour éclaircir ses voisines sans effacer la lettre. */
-.aurora__blob--5 {
-  left: 30%;
-  width: 30%;
-  opacity: 0.45;
-  background: var(--aur-6);
-  animation: aurore-5 17s ease-in-out infinite alternate;
-}
-
-@keyframes aurore-1 {
-  from { transform: translate(-6%, 0) scale(1); }
-  to   { transform: translate(22%, 5%) scale(1.18); }
-}
-@keyframes aurore-2 {
-  from { transform: translate(10%, 3%) scale(1.12); }
-  to   { transform: translate(-16%, -4%) scale(0.94); }
-}
-@keyframes aurore-3 {
-  from { transform: translate(-12%, -3%) scale(0.96); }
-  to   { transform: translate(16%, 6%) scale(1.2); }
-}
-@keyframes aurore-4 {
-  from { transform: translate(8%, 0) scale(1.14); }
-  to   { transform: translate(-20%, -5%) scale(0.98); }
-}
-@keyframes aurore-5 {
-  from { transform: translate(-40%, 4%) scale(1.05); }
-  to   { transform: translate(90%, -4%) scale(1.3); }
+/* La baseline du logotype : minuscule et très espacée. L'indentation
+   compense l'espace que l'interlettrage ajoute après la dernière
+   lettre, sinon la ligne paraît décentrée vers la gauche. */
+.intro__tagline {
+  margin: clamp(7px, 1.2svh, 11px) 0 0;
+  font-size: clamp(9.5px, 1.25svh, 11px);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .intro__sub {
@@ -598,7 +538,8 @@ model-viewer {
   .app { gap: 8px; }
   .card { padding: 10px; }
   .intro__sub { margin-top: 7px; font-size: 13px; }
-  .intro__title { font-size: 21px; }
+  .intro__title { font-size: 35px; }
+  .intro__tagline { margin-top: 5px; font-size: 9.5px; letter-spacing: 0.2em; }
 }
 
 /* ------------------------------------------- mouvement réduit */
@@ -607,6 +548,4 @@ model-viewer {
   .splash__mark { animation-duration: 3s; }
   .sheet__panel { animation: none; }
   .state { transition: none; }
-  /* L'aurore se fige : les couleurs restent, le mouvement s'arrête. */
-  .aurora__blob { animation: none; }
 }

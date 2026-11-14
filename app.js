@@ -18,6 +18,7 @@ const els = {
   errorText: $("error-text"),
   app: $("app"),
   appTitle: $("app-title"),
+  appTagline: $("app-tagline"),
   introSub: $("intro-sub"),
   cta: $("cta"),
   ctaLabel: $("cta-label"),
@@ -338,9 +339,11 @@ async function start() {
   selectedIndex = scannedIndex;
 
   const b = selected();
-  const title = config.app?.title || "Neo-Space";
+  const title = config.app?.title || "a.r.t.";
   document.title = `${title} — ${parcours.name || code}`;
-  els.appTitle.textContent = `« ${title} »`;
+  els.appTitle.textContent = title;
+  els.appTagline.textContent =
+    config.app?.tagline || "voyons le monde différemment";
   els.introSub.textContent =
     `Vous avez activé la ${(b.label || "balise " + b.numero).toLowerCase()} du ${(parcours.name || "parcours " + code).toLowerCase()}`;
   els.cardMeta.textContent =

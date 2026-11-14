@@ -1,13 +1,20 @@
 {
   "app": {
-    "title": "Neo-Space",
+    "title": "a.r.t.",
+    "tagline": "voyons le monde différemment",
     "version": "4.0-MVP"
   },
   "defaults": {
     "activationRadius": 25,
     "links": {
-      "moreParcours": { "label": "voir plus de parcours", "url": "" },
-      "contact": { "label": "contacter le créateur", "url": "" }
+      "moreParcours": {
+        "label": "voir plus de parcours",
+        "url": ""
+      },
+      "contact": {
+        "label": "contacter le créateur",
+        "url": ""
+      }
     }
   },
   "parcours": {
@@ -15,15 +22,24 @@
       "name": "Parcours 001",
       "creator": "artiste",
       "links": {
-        "moreParcours": { "label": "voir plus de parcours", "url": "" },
-        "contact": { "label": "contacter le créateur", "url": "" }
+        "moreParcours": {
+          "label": "voir plus de parcours",
+          "url": ""
+        },
+        "contact": {
+          "label": "contacter le créateur",
+          "url": ""
+        }
       },
       "balises": [
         {
           "numero": 1,
           "label": "Balise 1",
           "lieu": "Emplacement de test",
-          "coordinates": { "lat": 0, "lng": 0 },
+          "coordinates": {
+            "lat": 0,
+            "lng": 0
+          },
           "referenceImage": "",
           "artwork": {
             "title": "Monolith #01",
@@ -45,7 +61,10 @@
           "numero": 2,
           "label": "Balise 2",
           "lieu": "Seconde station",
-          "coordinates": { "lat": 0, "lng": 0 },
+          "coordinates": {
+            "lat": 0,
+            "lng": 0
+          },
           "referenceImage": "",
           "artwork": {
             "title": "Lame #02",
@@ -67,7 +86,10 @@
           "numero": 3,
           "label": "Balise 3",
           "lieu": "Troisième station",
-          "coordinates": { "lat": 0, "lng": 0 },
+          "coordinates": {
+            "lat": 0,
+            "lng": 0
+          },
           "referenceImage": "",
           "artwork": {
             "title": "Monolith #03",
